@@ -40,10 +40,39 @@ public:
 
 		login(emailc, passwordc);
 	}
-
+	bool ContainsEmail(const string &emailc) const
+	{
+		return email == emailc;
+	}
+	bool VerifyPassword(const string &passwordc) const
+	{
+		return password == passwordc;
+	}
 	void logout()
 	{
 		loggedIn = 0;
+	}
+};
+
+enum class AccountRole
+{
+	Patient,
+	Physician,
+	FrontDesk,
+	Nurse,
+	Scheduling,
+	Billing,
+	Administrator
+};
+
+struct LoginRecord
+{
+	UserAccount account;
+	AccountRole role;
+
+	LoginRecord(const UserAccount &accountc, AccountRole rolec)
+		: account(accountc), role(rolec)
+	{
 	}
 };
 
@@ -377,14 +406,49 @@ public:
 	vector<BillingStaff> billingStaff;
 	vector<SystemAdministrationStaff> adminStaff;
 	vector<Appointment> appointments;
+	vector<LoginRecord> loginAccounts;
 
-	void addPatient(const Patient &p) { patients.push_back(p); }
-	void addPhysician(const Physician &doc) { physicians.push_back(doc); }
-	void addFrontDeskStaff(const FrontDeskStaff &staff) { frontDeskStaff.push_back(staff); }
-	void addNurse(const Nurse &staff) { nurses.push_back(staff); }
-	void addSchedulingStaff(const SchedulingStaff &staff) { schedulingStaff.push_back(staff); }
-	void addBillingStaff(const BillingStaff &staff) { billingStaff.push_back(staff); }
-	void addAdminStaff(const SystemAdministrationStaff &staff) { adminStaff.push_back(staff); }
+	void addPatient(const Patient &p)
+	{
+		patients.push_back(p);
+		loginAccounts.emplace_back(p, AccountRole::Patient);
+	}
+
+	void addPhysician(const Physician &doc)
+	{
+		physicians.push_back(doc);
+		loginAccounts.emplace_back(doc, AccountRole::Physician);
+	}
+
+	void addFrontDeskStaff(const FrontDeskStaff &staff)
+	{
+		frontDeskStaff.push_back(staff);
+		loginAccounts.emplace_back(staff, AccountRole::FrontDesk);
+	}
+
+	void addNurse(const Nurse &staff)
+	{
+		nurses.push_back(staff);
+		loginAccounts.emplace_back(staff, AccountRole::Nurse);
+	}
+
+	void addSchedulingStaff(const SchedulingStaff &staff)
+	{
+		schedulingStaff.push_back(staff);
+		loginAccounts.emplace_back(staff, AccountRole::Scheduling);
+	}
+
+	void addBillingStaff(const BillingStaff &staff)
+	{
+		billingStaff.push_back(staff);
+		loginAccounts.emplace_back(staff, AccountRole::Billing);
+	}
+
+	void addAdminStaff(const SystemAdministrationStaff &staff)
+	{
+		adminStaff.push_back(staff);
+		loginAccounts.emplace_back(staff, AccountRole::Administrator);
+	}
 
 	void scheduleAppointment(int id, string date, string time, string desc, Patient *p, Physician *doc)
 	{
@@ -396,27 +460,43 @@ public:
 		Patient p1("Patient1@email.com", "pass123", "1985-08-12", "555-1111", "BlueCross");
 		Patient p2("Patient2@email.com", "pass456", "1985-08-08", "444-2222", "Medicare");
 
-		Physician doc1("Doc1@email.com", 1, "Dr. V", "pass1", 1, "Cardiology", 1, true, "Heart specialist");
-		Physician doc2("Doc2@email.com", 2, "Dr. Moschops", "pass2", 2, "Family Medicine", 2, true, "General care");
+		Physician doc1("Doc1@email.com", 1, "Dr. V", "pass12", 1, "Cardiology", 1, true, "Heart specialist");
+		Physician doc2("Doc2@email.com", 2, "Dr. Moschops", "pass22", 2, "Family Medicine", 2, true, "General care");
 
 		FrontDeskStaff desk("Front Desk", "frontdesk@email.com", "pass1");
 		Nurse nurse("Nurse", "nurse@email.com", "pass2");
 		SchedulingStaff scheduler("Scheduling", "sched@email.com", "pass3");
-		BillingStaff billing("billing@email.com", 1, "Dana Reed", "pass4", 1, "Billing", 1);
+		BillingStaff billing("billing@email.com", 1, "John Doe", "pass4", 1, "Billing", 1);
 		SystemAdministrationStaff admin("admin@email.com", 2, "Sam Brooks", "adminpass", 2, "Administration", 1, "admin123");
 
-		patients.push_back(p1);
-		patients.push_back(p2);
-		physicians.push_back(doc1);
-		physicians.push_back(doc2);
-		frontDeskStaff.push_back(desk);
-		nurses.push_back(nurse);
-		schedulingStaff.push_back(scheduler);
-		billingStaff.push_back(billing);
-		adminStaff.push_back(admin);
+		addPatient(p1);
+		addPatient(p2);
+		addPhysician(doc1);
+		addPhysician(doc2);
+		addFrontDeskStaff(desk);
+		addNurse(nurse);
+		addSchedulingStaff(scheduler);
+		addBillingStaff(billing);
+		addAdminStaff(admin);
 
 		appointments.push_back(Appointment(1, "2026-11-12", "10:00", "Routine checkup", &patients[0], &physicians[0]));
 		appointments.push_back(Appointment(2, "2026-11-12", "14:30", "Follow-up", &patients[1], &physicians[1]));
+	}
+	// might be better to have a list of roles and their corresponding users with info, but for now, this will work
+	bool authenticateUser(const string &email, const string &password, AccountRole &matchedRole) const
+	{
+		for (const LoginRecord &record : loginAccounts)
+		{
+			if (record.account.ContainsEmail(email))
+			{
+				if (!record.account.VerifyPassword(password))
+					return false;
+
+				matchedRole = record.role;
+				return true;
+			}
+		}
+		return false;
 	}
 };
 
@@ -444,7 +524,52 @@ int main()
 	std::cout << "Please enter your password: ";
 	std::cin >> password;
 
-	UserAccount user(email, password); // login = 1
-	//
+	AccountRole role;
+	if (!hospital.authenticateUser(email, password, role))
+	{
+		std::cout << "Invalid email or password." << std::endl;
+		return 1;
+	}
+
+	if (role == AccountRole::Patient)
+	{
+		std::cout << "Patient login successful." << std::endl;
+		// Leads to patient dashboard or functionality
+	}
+	else
+	{
+		std::cout << "Staff login successful. Role: ";
+		switch (role)
+		{
+		case AccountRole::Physician:
+			std::cout << "Physician";
+			// Leads to physician dashboard or functionality
+			break;
+		case AccountRole::FrontDesk:
+			std::cout << "Front Desk";
+			// Leads to front desk dashboard or functionality
+			break;
+		case AccountRole::Nurse:
+			std::cout << "Nurse";
+			// Leads to nurse dashboard or functionality
+			break;
+		case AccountRole::Scheduling:
+			std::cout << "Scheduling";
+			// Leads to scheduling dashboard or functionality
+			break;
+		case AccountRole::Billing:
+			std::cout << "Billing";
+			// Leads to billing dashboard or functionality
+			break;
+		case AccountRole::Administrator:
+			std::cout << "Administrator";
+			// Leads to administrator dashboard or functionality
+			break;
+		case AccountRole::Patient:
+			break;
+		}
+		std::cout << std::endl;
+	}
+
 	return 0;
 }

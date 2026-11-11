@@ -4,6 +4,8 @@
 
 using namespace std;
 
+class HospitalSystem;
+
 class UserAccount
 {
 
@@ -105,13 +107,22 @@ public:
 class Patient;
 class Physician;
 
+enum Status{
+	SCHEDULED,
+	CANCELLED,
+	CHECKEDIN,
+	INROOM,
+	SEEN,
+	FINSIHED
+}
+
 class Appointment
 {
 public:
 	string date;
 	string time;
 	string appointmentDesc;
-	string status;
+	Status appointmentStatus;
 
 	Patient *patient;
 	Physician *provider;
@@ -124,12 +135,12 @@ public:
 		appointmentDesc = appointmentDescc;
 		patient = patientc;
 		provider = providerc;
-		status = "Scheduled";
+		status = SCHEDULED;
 	}
 
 	void schedule()
 	{
-		status = "Scheduled";
+		status = SCHEDULED;
 	}
 
 	void reschedule(string newDate, string newTime)
@@ -140,8 +151,9 @@ public:
 
 	void cancel()
 	{
-		status = "Cancelled";
+		status = CANCELLED;
 	}
+
 
 private:
 	int appointmentID;
@@ -205,23 +217,31 @@ public:
 class FrontDeskStaff : public Staff
 {
 private:
+	HospitalSystem system;
 	static int frontDeskStaffCount;
 	int frontDeskStaffID;
 
 	void checkInPatient()
 	{
+		string patientEmail;
+		cout << "Please enter patient email" << endl;
+		cin >> patientEmail;
+		system->checkInPatient(patientEmail, )
 	}
 
 	void verifyInformation()
 	{
+
 	}
 
 	void viewSchedule()
 	{
+
 	}
 
 	void updateAppointment()
 	{
+
 	}
 
 public:
@@ -311,18 +331,22 @@ public:
 
 	void view_Schedule()
 	{
+
 	}
 
 	void view_Patient_Profile()
 	{
+
 	}
 
 	void edit_appointment_info()
 	{
+
 	}
 
 	void view_appointment_details()
 	{
+
 	}
 
 private:
@@ -407,6 +431,7 @@ public:
 	vector<SystemAdministrationStaff> adminStaff;
 	vector<Appointment> appointments;
 	vector<LoginRecord> loginAccounts;
+	string todayDate;
 
 	void addPatient(const Patient &p)
 	{
@@ -497,6 +522,24 @@ public:
 			}
 		}
 		return false;
+	}
+
+	void checkInAppointment(const string patientEmail)
+	{
+		int i = 0;
+		while ((appointments[i]->patient->email!=patientEmail || appointments[i]->date!=todayDate) && i<appointments.size()){
+			i++;
+		}
+		if (i==appointments.size()){
+			cout << "No such appointment exists" << endl;
+		}
+		if (appointments[i]->appointmentStatus==SCHEDULED){
+			appointments[i]->appointmentStatus=CHECKEDIN;
+			cout << appointments[i]->patient->email << " has been checked in" << endl;
+		}
+		else{
+			cout << appointment[i]->patient->email << "'s appointment is " << appointments[i]=>appointmentStatus << endl;
+		}
 	}
 };
 

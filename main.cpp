@@ -214,29 +214,15 @@ public:
 		insurance = insurancec;
 	}
 
-	void viewSchedule()
-	{
-		for (size_t i = 0; i < appointments.size(); i++)
-		{
-			cout << appointments[i]->date << " ";
-			cout << appointments[i]->time << " ";
-			cout << appointments[i]->appointmentStatus << endl;
-		}
-	}
+	void viewSchedule(const vector<Appointment> &appointmentList);
 
-	void makeAppointment(Appointment *appointment)
-	{
-		appointments.push_back(appointment);
-		appointment->schedule();
-	}
+	void makeAppointment(Appointment *appointment, HospitalSystem *hospitalSystem);
 
 	void edit_profile()
 	{
 	}
 
-	void search_provider()
-	{
-	}
+	void search_provider(const vector<Physician> &physicians);
 
 	void view_provider_info()
 	{
@@ -370,6 +356,7 @@ public:
 
 	void view_Schedule()
 	{
+
 	}
 
 	void view_Patient_Profile()
@@ -387,6 +374,27 @@ public:
 private:
 	int physicianID;
 };
+
+void Patient::viewSchedule(const vector<Appointment> &appointmentList)
+{
+	for (size_t i = 0; i < appointmentList.size(); i++)
+	{
+		cout << appointmentList[i].date << " ";
+		cout << appointmentList[i].time << " ";
+		cout << appointmentList[i].appointmentStatus << " ";
+		cout << appointmentList[i].provider->providerInfo << " ";
+		cout << appointmentList[i].patient->GetEmail() << " ";
+		cout << appointmentList[i].appointmentDesc << endl;
+	}
+}
+
+void Patient::search_provider(const vector<Physician> &physicians)
+{
+	for (const Physician &physician : physicians)
+	{
+		cout << "Provider: " << physician.GetEmail() << ", Info: " << physician.providerInfo << endl;
+	}
+}
 
 class SystemAdministrationStaff : public Staff
 {
@@ -588,6 +596,18 @@ public:
 	}
 };
 
+void Patient::makeAppointment(Appointment *appointment, HospitalSystem *hospitalSystem)
+{
+	if (appointment == nullptr || hospitalSystem == nullptr)
+	{
+		cout << "Appointment or hospital system is unavailable." << endl;
+		return;
+	}
+
+	hospitalSystem->appointments.push_back(*appointment);
+	appointment->schedule();
+}
+
 void FrontDeskStaff::checkInPatient()
 {
 	if (hospitalSystem == nullptr)
@@ -602,7 +622,7 @@ void FrontDeskStaff::checkInPatient()
 	hospitalSystem->checkInAppointment(patientEmail);
 }
 
-void patientScreen(Patient &patient)
+void patientScreen(Patient &patient, HospitalSystem &hospital)
 {
 	int choice;
 	do
@@ -619,22 +639,36 @@ void patientScreen(Patient &patient)
 		switch (choice)
 		{
 		case 1:
-			patient.viewSchedule();
+		{
+			patient.viewSchedule(hospital.appointments);
 			break;
+		}
 		case 2:
-			patient.search_provider();
+		{
+			patient.search_provider(hospital.physicians);
 			break;
+		}
 		case 3:
-			cout << "Booking is not implemented yet.\n";
+		{
+			Appointment newAppointment(3, "2026-11-16", "09:30", "New Medical Condition", &patient, &hospital.physicians[0]);
+			patient.makeAppointment(&newAppointment, &hospital);
 			break;
+		}
 		case 4:
+		{
 			patient.edit_profile();
 			break;
+		}
 		case 0:
+		{
 			cout << "Logged out.\n";
 			break;
+		}
 		default:
+		{
 			cout << "Invalid choice.\n";
+			break;
+		}
 		}
 	} while (choice != 0);
 }
@@ -676,19 +710,30 @@ void physicianScreen(Physician &physician, HospitalSystem &hospital)
 			break;
 		}
 		case 2:
+		{
 			physician.view_Patient_Profile();
 			break;
+		}
 		case 3:
+		{
 			physician.view_appointment_details();
 			break;
+		}
 		case 4:
+		{
 			physician.edit_appointment_info();
 			break;
+		}
 		case 0:
+		{
 			cout << "Logged out.\n";
 			break;
+		}
 		default:
+		{
 			cout << "Invalid choice.\n";
+			break;
+		}
 		}
 	} while (choice != 0);
 }
@@ -766,7 +811,7 @@ int main()
 
 		loggedInUser = patient;
 		std::cout << "Patient login successful." << std::endl;
-		patientScreen(*patient);
+		patientScreen(*patient, hospital);
 		break;
 	}
 	case AccountRole::Physician:

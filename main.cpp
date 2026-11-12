@@ -578,6 +578,80 @@ void patientScreen(Patient &patient)
 	} while (choice != 0);
 }
 
+void physicianScreen(Physician &physician, HospitalSystem &hospital)
+{
+	int choice;
+
+	do
+	{
+		cout << "\nPhysician Menu\n"
+			 << "1. View schedule\n"
+			 << "2. View patient profile\n"
+			 << "3. View appointment details\n"
+			 << "4. Edit appointment information\n"
+			 << "0. Log out\n"
+			 << "Choose an option: ";
+		cin >> choice;
+
+		switch (choice)
+		{
+		case 1:
+		{
+			bool foundAppointment = false;
+
+			for (const Appointment &appointment : hospital.appointments)
+			{
+				if (appointment.provider == &physician)
+				{
+					cout << appointment.date << " "
+						 << appointment.time << " "
+						 << appointment.appointmentDesc << endl;
+					foundAppointment = true;
+				}
+			}
+
+			if (!foundAppointment)
+				cout << "No appointments found.\n";
+			break;
+		}
+		case 2:
+			physician.view_Patient_Profile();
+			break;
+		case 3:
+			physician.view_appointment_details();
+			break;
+		case 4:
+			physician.edit_appointment_info();
+			break;
+		case 0:
+			cout << "Logged out.\n";
+			break;
+		default:
+			cout << "Invalid choice.\n";
+		}
+	} while (choice != 0);
+}
+
+void frontDeskScreen(FrontDeskStaff &)
+{
+}
+
+void nurseScreen(Nurse &)
+{
+}
+
+void schedulingScreen(SchedulingStaff &)
+{
+}
+
+void billingScreen(BillingStaff &)
+{
+}
+
+void administratorScreen(SystemAdministrationStaff &)
+{
+}
+
 template <typename AccountType>
 AccountType *findAccountByEmail(
 	vector<AccountType> &accounts,
@@ -622,55 +696,79 @@ int main()
 		std::cout << "Invalid email or password." << std::endl;
 		return 1;
 	}
-case AccountRole::Patient:
-{
-	cout << "Patient login successful.\n";
 
-	Patient *patient = findAccountByEmail(hospital.patients, email);
-	if (patient == nullptr)
+	switch (role)
 	{
-		cout << "Patient account not found.\n";
+	case AccountRole::Patient:
+	{
+		Patient *patient = findAccountByEmail(hospital.patients, email);
+
+		loggedInUser = patient;
+		std::cout << "Patient login successful." << std::endl;
+		patientScreen(*patient);
+		break;
+	}
+	case AccountRole::Physician:
+	{
+		Physician *physician = findAccountByEmail(hospital.physicians, email);
+		loggedInUser = physician;
+		std::cout << "Staff login successful. Role: Physician" << std::endl;
+		if (physician != nullptr)
+			physicianScreen(*physician, hospital);
+		break;
+	}
+	case AccountRole::FrontDesk:
+	{
+		FrontDeskStaff *staff = findAccountByEmail(hospital.frontDeskStaff, email);
+		loggedInUser = staff;
+		std::cout << "Staff login successful. Role: Front Desk" << std::endl;
+		if (staff != nullptr)
+			frontDeskScreen(*staff);
+		break;
+	}
+	case AccountRole::Nurse:
+	{
+		Nurse *staff = findAccountByEmail(hospital.nurses, email);
+		loggedInUser = staff;
+		std::cout << "Staff login successful. Role: Nurse" << std::endl;
+		if (staff != nullptr)
+			nurseScreen(*staff);
+		break;
+	}
+	case AccountRole::Scheduling:
+	{
+		SchedulingStaff *staff = findAccountByEmail(hospital.schedulingStaff, email);
+		loggedInUser = staff;
+		std::cout << "Staff login successful. Role: Scheduling" << std::endl;
+		if (staff != nullptr)
+			schedulingScreen(*staff);
+		break;
+	}
+	case AccountRole::Billing:
+	{
+		BillingStaff *staff = findAccountByEmail(hospital.billingStaff, email);
+		loggedInUser = staff;
+		std::cout << "Staff login successful. Role: Billing" << std::endl;
+		if (staff != nullptr)
+			billingScreen(*staff);
+		break;
+	}
+	case AccountRole::Administrator:
+	{
+		SystemAdministrationStaff *staff = findAccountByEmail(hospital.adminStaff, email);
+		loggedInUser = staff;
+		std::cout << "Staff login successful. Role: Administrator" << std::endl;
+		if (staff != nullptr)
+			administratorScreen(*staff);
+		break;
+	}
+	}
+
+	if (loggedInUser == nullptr)
+	{
+		std::cout << "Account not found." << std::endl;
 		return 1;
 	}
 
-	loggedInUser = patient;
-	patientScreen(*patient);
-	break;
-}
-case AccountRole::Physician:
-	cout << "Staff login successful. Role: Physician\n";
-	loggedInUser = findAccountByEmail(hospital.physicians, email);
-	break;
-case AccountRole::FrontDesk:
-	cout << "Staff login successful. Role: Front Desk\n";
-	loggedInUser = findAccountByEmail(hospital.frontDeskStaff, email);
-	break;
-case AccountRole::Nurse:
-	std::cout << "Nurse";
-	loggedInUser = findAccountByEmail(hospital.nurses, email);
-	// Leads to nurse dashboard or functionality
-	break;
-case AccountRole::Scheduling:
-	std::cout << "Scheduling";
-	loggedInUser = findAccountByEmail(hospital.schedulingStaff, email);
-	// Leads to scheduling dashboard or functionality
-	break;
-case AccountRole::Billing:
-	std::cout << "Billing";
-	loggedInUser = findAccountByEmail(hospital.billingStaff, email);
-	// Leads to billing dashboard or functionality
-	break;
-case AccountRole::Administrator:
-	std::cout << "Administrator";
-	loggedInUser = findAccountByEmail(hospital.adminStaff, email);
-	// Leads to administrator dashboard or functionality
-	break;
-case AccountRole::Patient:
-	loggedInUser = findAccountByEmail(hospital.patients, email);
-	break;
-}
-std::cout << std::endl;
-}
-
-return 0;
+	return 0;
 }

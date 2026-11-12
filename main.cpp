@@ -6,6 +6,15 @@ using namespace std;
 
 class HospitalSystem;
 
+class Notification
+{
+public:
+	void send() const
+	{
+		cout << "notification sent" << '\n';
+	}
+};
+
 class UserAccount
 {
 
@@ -49,6 +58,10 @@ public:
 	bool VerifyPassword(const string &passwordc) const
 	{
 		return password == passwordc;
+	}
+	const string &GetEmail() const
+	{
+		return email;
 	}
 	void logout()
 	{
@@ -126,6 +139,7 @@ public:
 	string appointmentDesc;
 	Status appointmentStatus;
 
+	Notification notification;
 	Patient *patient;
 	Physician *provider;
 
@@ -143,17 +157,20 @@ public:
 	void schedule()
 	{
 		appointmentStatus = SCHEDULED;
+		notification.send();
 	}
 
 	void reschedule(string newDate, string newTime)
 	{
 		date = newDate;
 		time = newTime;
+		notification.send();
 	}
 
 	void cancel()
 	{
 		appointmentStatus = CANCELLED;
+		notification.send();
 	}
 
 private:
@@ -183,7 +200,7 @@ public:
 
 	void viewSchedule()
 	{
-		for (int i = 0; i < appointments.size(); i++)
+		for (size_t i = 0; i < appointments.size(); i++)
 		{
 			cout << appointments[i]->date << " ";
 			cout << appointments[i]->time << " ";
@@ -218,17 +235,12 @@ public:
 class FrontDeskStaff : public Staff
 {
 private:
-	HospitalSystem system;
+	HospitalSystem *hospitalSystem = nullptr;
 	static int frontDeskStaffCount;
 	int frontDeskStaffID;
+	Notification notification;
 
-	void checkInPatient()
-	{
-		string patientEmail;
-		cout << "Please enter patient email" << endl;
-		cin >> patientEmail;
-		system->checkInPatient(patientEmail, )
-	}
+	void checkInPatient();
 
 	void verifyInformation()
 	{
@@ -240,6 +252,7 @@ private:
 
 	void updateAppointment()
 	{
+		notification.send();
 	}
 
 public:
@@ -247,6 +260,11 @@ public:
 	{
 		frontDeskStaffCount++;
 		frontDeskStaffID = frontDeskStaffCount;
+	}
+
+	void setHospitalSystem(HospitalSystem *system)
+	{
+		hospitalSystem = system;
 	}
 };
 
@@ -276,17 +294,22 @@ private:
 
 	void createAppointment()
 	{
+
+		notification.send();
 	}
 
 	void deleteAppointment()
 	{
+		notification.send();
 	}
 
 	void manage_appointment()
 	{
+		notification.send();
 	}
 
 public:
+	Notification notification;
 	SchedulingStaff(string schedulingStaffNamec, string emailc, string passwordc) : Staff("Scheduling", emailc, passwordc)
 	{
 		schedulingStaffCount++;
@@ -297,6 +320,7 @@ public:
 class BillingStaff : public Staff
 {
 public:
+	Notification notification;
 	BillingStaff(string emailc, int userIDc, string namec, string passwordc, int staffIDc, string departmentTypec, int billingIDc) : Staff(emailc, userIDc, namec, passwordc, staffIDc, departmentTypec)
 	{
 		billingID = billingIDc;
@@ -304,6 +328,7 @@ public:
 
 	void send_payment()
 	{
+		notification.send();
 	}
 
 	void review_visit_info()
@@ -392,6 +417,7 @@ public:
 
 	Schedule(int scheduleIDc, string monthc, int dayc)
 	{
+
 		scheduleID = scheduleIDc;
 		month = monthc;
 		day = dayc;
@@ -404,11 +430,11 @@ public:
 
 	void viewAppointments()
 	{
-		for (int i = 0; i < appointments.size(); i++)
+		for (size_t i = 0; i < appointments.size(); i++)
 		{
 			cout << appointments[i]->date << " ";
 			cout << appointments[i]->time << " ";
-			cout << appointments[i]->status << endl;
+			cout << appointments[i]->appointmentStatus << endl;
 		}
 	}
 };
@@ -426,6 +452,7 @@ public:
 	vector<Appointment> appointments;
 	vector<LoginRecord> loginAccounts;
 	string todayDate;
+	Notification notification;
 
 	void addPatient(const Patient &p)
 	{
@@ -442,6 +469,7 @@ public:
 	void addFrontDeskStaff(const FrontDeskStaff &staff)
 	{
 		frontDeskStaff.push_back(staff);
+		frontDeskStaff.back().setHospitalSystem(this);
 		loginAccounts.emplace_back(staff, AccountRole::FrontDesk);
 	}
 
@@ -520,26 +548,43 @@ public:
 
 	void checkInAppointment(const string patientEmail)
 	{
-		int i = 0;
-		while ((appointments[i]->patient->email != patientEmail || appointments[i]->date != todayDate) && i < appointments.size())
+		size_t i = 0;
+		while (i < appointments.size() &&
+			   (appointments[i].patient->GetEmail() != patientEmail || appointments[i].date != todayDate))
 		{
 			i++;
 		}
 		if (i == appointments.size())
 		{
 			cout << "No such appointment exists" << endl;
+			return;
 		}
-		if (appointments[i]->appointmentStatus == SCHEDULED)
+		if (appointments[i].appointmentStatus == SCHEDULED)
 		{
-			appointments[i]->appointmentStatus = CHECKEDIN;
-			cout << appointments[i]->patient->email << " has been checked in" << endl;
+			appointments[i].appointmentStatus = CHECKEDIN;
+			cout << appointments[i].patient->GetEmail() << " has been checked in" << endl;
+			notification.send();
 		}
 		else
 		{
-			cout << appointment[i]->patient->email << "'s appointment is " << appointments[i] = > appointmentStatus << endl;
+			cout << appointments[i].patient->GetEmail() << "'s appointment is " << appointments[i].appointmentStatus << endl;
 		}
 	}
 };
+
+void FrontDeskStaff::checkInPatient()
+{
+	if (hospitalSystem == nullptr)
+	{
+		cout << "Hospital system is unavailable" << endl;
+		return;
+	}
+
+	string patientEmail;
+	cout << "Please enter patient email" << endl;
+	cin >> patientEmail;
+	hospitalSystem->checkInAppointment(patientEmail);
+}
 
 void patientScreen(Patient &patient)
 {

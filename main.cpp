@@ -177,6 +177,22 @@ private:
 	int appointmentID;
 };
 
+class Insurance
+{
+private:
+	string providerName;
+	string policyNumber;
+
+public:
+	Insurance(string providerNamec = "", string policyNumberc = "")
+		: providerName(providerNamec), policyNumber(policyNumberc)
+	{
+	}
+
+	const string &getProviderName() const { return providerName; }
+	const string &getPolicyNumber() const { return policyNumber; }
+};
+
 class Patient : public UserAccount
 {
 private:
@@ -186,16 +202,16 @@ private:
 public:
 	string dateOfBirth;
 	string emergencyContact;
-	string insuranceProvider;
+	Insurance insurance;
 	vector<Appointment *> appointments;
 
-	Patient(string emailc, string passwordc, string dateOfBirthc = "", string emergencyContactc = "", string insuranceProviderc = "") : UserAccount(emailc, passwordc)
+	Patient(string emailc, string passwordc, string dateOfBirthc = "", string emergencyContactc = "", const Insurance &insurancec = Insurance()) : UserAccount(emailc, passwordc)
 	{
 		patientCount++;
 		patientID = patientCount;
 		dateOfBirth = dateOfBirthc;
 		emergencyContact = emergencyContactc;
-		insuranceProvider = insuranceProviderc;
+		insurance = insurancec;
 	}
 
 	void viewSchedule()
@@ -504,8 +520,8 @@ public:
 
 	void initializeHospital()
 	{
-		Patient p1("Patient1@email.com", "pass123", "1985-08-12", "555-1111", "BlueCross");
-		Patient p2("Patient2@email.com", "pass456", "1985-08-08", "444-2222", "Medicare");
+		Patient p1("Patient1@email.com", "pass123", "1985-08-12", "555-1111", Insurance("BlueCross"));
+		Patient p2("Patient2@email.com", "pass456", "1985-08-08", "444-2222", Insurance("Medicare"));
 
 		Physician doc1("Doc1@email.com", 1, "Dr. V", "pass12", 1, "Cardiology", 1, true, "Heart specialist");
 		Physician doc2("Doc2@email.com", 2, "Dr. Moschops", "pass22", 2, "Family Medicine", 2, true, "General care");

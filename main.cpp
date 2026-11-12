@@ -114,10 +114,10 @@ enum Status{
 	INROOM,
 	SEEN,
 	FINSIHED
-}
+};
 
-class Appointment
-{
+class Appointment {
+    
 public:
 	string date;
 	string time;
@@ -135,12 +135,12 @@ public:
 		appointmentDesc = appointmentDescc;
 		patient = patientc;
 		provider = providerc;
-		status = SCHEDULED;
+		appointmentStatus = SCHEDULED;
 	}
 
 	void schedule()
 	{
-		status = SCHEDULED;
+		appointmentStatus = SCHEDULED;
 	}
 
 	void reschedule(string newDate, string newTime)
@@ -151,7 +151,7 @@ public:
 
 	void cancel()
 	{
-		status = CANCELLED;
+		appointmentStatus = CANCELLED;
 	}
 
 
@@ -186,7 +186,7 @@ public:
 		{
 			cout << appointments[i]->date << " ";
 			cout << appointments[i]->time << " ";
-			cout << appointments[i]->status << endl;
+			cout << appointments[i]->appointmentStatus << endl;
 		}
 	}
 

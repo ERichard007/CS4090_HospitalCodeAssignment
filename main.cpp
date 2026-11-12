@@ -107,7 +107,8 @@ public:
 class Patient;
 class Physician;
 
-enum Status{
+enum Status
+{
 	SCHEDULED,
 	CANCELLED,
 	CHECKEDIN,
@@ -116,8 +117,9 @@ enum Status{
 	FINSIHED
 };
 
-class Appointment {
-    
+class Appointment
+{
+
 public:
 	string date;
 	string time;
@@ -153,7 +155,6 @@ public:
 	{
 		appointmentStatus = CANCELLED;
 	}
-
 
 private:
 	int appointmentID;
@@ -231,17 +232,14 @@ private:
 
 	void verifyInformation()
 	{
-
 	}
 
 	void viewSchedule()
 	{
-
 	}
 
 	void updateAppointment()
 	{
-
 	}
 
 public:
@@ -331,22 +329,18 @@ public:
 
 	void view_Schedule()
 	{
-
 	}
 
 	void view_Patient_Profile()
 	{
-
 	}
 
 	void edit_appointment_info()
 	{
-
 	}
 
 	void view_appointment_details()
 	{
-
 	}
 
 private:
@@ -527,21 +521,75 @@ public:
 	void checkInAppointment(const string patientEmail)
 	{
 		int i = 0;
-		while ((appointments[i]->patient->email!=patientEmail || appointments[i]->date!=todayDate) && i<appointments.size()){
+		while ((appointments[i]->patient->email != patientEmail || appointments[i]->date != todayDate) && i < appointments.size())
+		{
 			i++;
 		}
-		if (i==appointments.size()){
+		if (i == appointments.size())
+		{
 			cout << "No such appointment exists" << endl;
 		}
-		if (appointments[i]->appointmentStatus==SCHEDULED){
-			appointments[i]->appointmentStatus=CHECKEDIN;
+		if (appointments[i]->appointmentStatus == SCHEDULED)
+		{
+			appointments[i]->appointmentStatus = CHECKEDIN;
 			cout << appointments[i]->patient->email << " has been checked in" << endl;
 		}
-		else{
-			cout << appointment[i]->patient->email << "'s appointment is " << appointments[i]=>appointmentStatus << endl;
+		else
+		{
+			cout << appointment[i]->patient->email << "'s appointment is " << appointments[i] = > appointmentStatus << endl;
 		}
 	}
 };
+
+void patientScreen(Patient &patient)
+{
+	int choice;
+	do
+	{
+		cout << "\nPatient Menu\n"
+			 << "1. View schedule\n"
+			 << "2. Search providers\n"
+			 << "3. Book appointment\n"
+			 << "4. Edit profile\n"
+			 << "0. Log out\n"
+			 << "Choose an option: ";
+		cin >> choice;
+
+		switch (choice)
+		{
+		case 1:
+			patient.viewSchedule();
+			break;
+		case 2:
+			patient.search_provider();
+			break;
+		case 3:
+			cout << "Booking is not implemented yet.\n";
+			break;
+		case 4:
+			patient.edit_profile();
+			break;
+		case 0:
+			cout << "Logged out.\n";
+			break;
+		default:
+			cout << "Invalid choice.\n";
+		}
+	} while (choice != 0);
+}
+
+template <typename AccountType>
+AccountType *findAccountByEmail(
+	vector<AccountType> &accounts,
+	const string &email)
+{
+	for (AccountType &account : accounts)
+	{
+		if (account.ContainsEmail(email))
+			return &account;
+	}
+	return nullptr;
+}
 
 int UserAccount::userCount = 0;
 int Staff::staffCount = 0;
@@ -554,6 +602,7 @@ int SchedulingStaff::schedulingStaffCount = 0;
 
 int main()
 {
+	UserAccount *loggedInUser = nullptr;
 	HospitalSystem hospital;
 	hospital.initializeHospital();
 
@@ -573,46 +622,55 @@ int main()
 		std::cout << "Invalid email or password." << std::endl;
 		return 1;
 	}
+case AccountRole::Patient:
+{
+	cout << "Patient login successful.\n";
 
-	if (role == AccountRole::Patient)
+	Patient *patient = findAccountByEmail(hospital.patients, email);
+	if (patient == nullptr)
 	{
-		std::cout << "Patient login successful." << std::endl;
-		// Leads to patient dashboard or functionality
-	}
-	else
-	{
-		std::cout << "Staff login successful. Role: ";
-		switch (role)
-		{
-		case AccountRole::Physician:
-			std::cout << "Physician";
-			// Leads to physician dashboard or functionality
-			break;
-		case AccountRole::FrontDesk:
-			std::cout << "Front Desk";
-			// Leads to front desk dashboard or functionality
-			break;
-		case AccountRole::Nurse:
-			std::cout << "Nurse";
-			// Leads to nurse dashboard or functionality
-			break;
-		case AccountRole::Scheduling:
-			std::cout << "Scheduling";
-			// Leads to scheduling dashboard or functionality
-			break;
-		case AccountRole::Billing:
-			std::cout << "Billing";
-			// Leads to billing dashboard or functionality
-			break;
-		case AccountRole::Administrator:
-			std::cout << "Administrator";
-			// Leads to administrator dashboard or functionality
-			break;
-		case AccountRole::Patient:
-			break;
-		}
-		std::cout << std::endl;
+		cout << "Patient account not found.\n";
+		return 1;
 	}
 
-	return 0;
+	loggedInUser = patient;
+	patientScreen(*patient);
+	break;
+}
+case AccountRole::Physician:
+	cout << "Staff login successful. Role: Physician\n";
+	loggedInUser = findAccountByEmail(hospital.physicians, email);
+	break;
+case AccountRole::FrontDesk:
+	cout << "Staff login successful. Role: Front Desk\n";
+	loggedInUser = findAccountByEmail(hospital.frontDeskStaff, email);
+	break;
+case AccountRole::Nurse:
+	std::cout << "Nurse";
+	loggedInUser = findAccountByEmail(hospital.nurses, email);
+	// Leads to nurse dashboard or functionality
+	break;
+case AccountRole::Scheduling:
+	std::cout << "Scheduling";
+	loggedInUser = findAccountByEmail(hospital.schedulingStaff, email);
+	// Leads to scheduling dashboard or functionality
+	break;
+case AccountRole::Billing:
+	std::cout << "Billing";
+	loggedInUser = findAccountByEmail(hospital.billingStaff, email);
+	// Leads to billing dashboard or functionality
+	break;
+case AccountRole::Administrator:
+	std::cout << "Administrator";
+	loggedInUser = findAccountByEmail(hospital.adminStaff, email);
+	// Leads to administrator dashboard or functionality
+	break;
+case AccountRole::Patient:
+	loggedInUser = findAccountByEmail(hospital.patients, email);
+	break;
+}
+std::cout << std::endl;
+}
+
+return 0;
 }
